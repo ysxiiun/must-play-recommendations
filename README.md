@@ -12,7 +12,8 @@
 - **智能降级补充**：5A不足时自动搜索4A级景区补充
 - **热门探索**：通过关键词搜索发现用户关注度最高的景点
 - **推荐理由生成**：基于等级+类别自动生成推荐文案
-- **结构化输出**：标准 JSON 格式，便于下游处理
+- **友好格式输出**：Markdown 格式，清晰易读
+- **返回全部景点**：不限制数量，返回所有推荐景点
 
 ## 触发词
 
@@ -37,37 +38,32 @@
 
 ### 输出
 
-JSON 格式景点推荐结果：
+Markdown 格式景点推荐结果：
 
-```json
-{
-  "status": "success",
-  "city": "杭州",
-  "summary": {
-    "totalAttractions": 5,
-    "5aCount": 4
-  },
-  "recommendations": [
-    {
-      "rank": 1,
-      "name": "西湖风景名胜区",
-      "level": "5A",
-      "category": "山湖田园",
-      "address": "浙江省杭州市西湖区龙井路1号",
-      "isFree": true,
-      "ticketInfo": null,
-      "recommendReason": "国家5A级景区，杭州标志性打卡地，来杭州必去的经典景点",
-      "jumpUrl": "https://a.feizhu.com/xxx",
-      "mainPic": "https://img.alicdn.com/xxx.jpg",
-      "tags": ["自然风光", "地标"]
-    }
-  ],
-  "metadata": {
-    "generatedAt": "2026-04-01T10:30:00Z",
-    "dataSource": "FlyAI CLI",
-    "version": "1.0.0"
-  }
-}
+```markdown
+# 北京必玩景点推荐
+
+> 基于 fly.ai 实时结果 | 生成时间: 2026-04-01
+
+共推荐 **10** 个景点，其中5A级 **10** 个。
+
+---
+
+## 1. 故宫博物院 (5A)
+
+![](https://img.alicdn.com/xxx.jpg)
+
+**类别**: 博物馆
+**地址**: 北京市东城区景山前街4号
+**门票**: 未知 CNY
+**推荐理由**: 国家5A级景区，北京标志性打卡地，来北京必去的经典景点
+**标签**: 历史文化 | 地标 | 博物馆
+
+[点击预订](https://a.feizhu.com/xxx)
+
+---
+
+...
 ```
 
 ### 输出字段说明
@@ -78,12 +74,10 @@ JSON 格式景点推荐结果：
 | `level` | 景点等级（5A/4A/3A/未评级） |
 | `category` | 景点类别 |
 | `address` | 景点地址 |
-| `isFree` | 是否免费 |
-| `ticketInfo.price` | 门票价格（未知返回"未知"） |
-| `recommendReason` | 推荐理由 |
-| `jumpUrl` | 预订链接 |
-| `mainPic` | 主图链接 |
-| `tags` | 标签列表 |
+| `门票` | 门票价格（未知返回"未知"） |
+| `推荐理由` | 基于等级+类别自动生成 |
+| `预订链接` | 点击跳转预订 |
+| `标签` | 景点特色标签 |
 
 ## 推荐定位
 

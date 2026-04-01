@@ -17,7 +17,7 @@ triggers:
 
 ## 概述
 
-本技能为用户提供城市必玩景点的智能推荐服务。聚焦热门、打卡地、高品质景点，通过 FlyAI CLI 获取景点数据，整合生成结构化 JSON 格式输出。
+本技能为用户提供城市必玩景点的智能推荐服务。聚焦热门、打卡地、高品质景点，通过 FlyAI CLI 获取景点数据，以友好的 Markdown 格式输出所有推荐景点。
 
 ---
 
@@ -56,7 +56,7 @@ flyai search-poi --city-name "{城市名称}" --poi-level 5
 
 **处理逻辑**：
 - 如果返回结果为空，降级搜索4A级景区
-- 最多取前5个高等级景区作为核心推荐
+- 返回所有获取到的景点，不限制数量
 - 提取字段：name, address, category, poiLevel, freePoiStatus, ticketInfo, jumpUrl, mainPic
 
 ### Step 3: 获取补充推荐（可选）
@@ -107,72 +107,78 @@ flyai ai-search --query "推荐{城市名称}适合{场景}的景点"
 
 ### Step 5: 整合输出
 
-将所有景点数据整合为标准 JSON 格式输出。
+将所有景点数据整合为友好的 Markdown 格式输出，包含所有推荐的景点。
 
 ---
 
 ## 输出格式规范
 
-### JSON 输出结构
+### Markdown 输出结构
 
-```json
-{
-  "status": "success",
-  "city": "{城市名称}",
-  "summary": {
-    "totalAttractions": 8,
-    "5aCount": 3,
-    "4aCount": 2
-  },
-  "recommendations": [
-    {
-      "rank": 1,
-      "name": "故宫博物院",
-      "level": "5A",
-      "category": "博物馆",
-      "address": "北京市东城区景山前街4号",
-      "isFree": false,
-      "ticketInfo": {
-        "price": "60",
-        "ticketName": "大门票 成人票",
-        "priceDate": "2026-04-01"
-      },
-      "recommendReason": "国家5A级景区，北京标志性打卡地，来北京必去的经典景点",
-      "jumpUrl": "https://a.feizhu.com/xxx",
-      "mainPic": "https://img.alicdn.com/xxx.jpg",
-      "tags": ["历史文化", "地标", "博物馆"]
-    }
-  ],
-  "metadata": {
-    "generatedAt": "2026-04-01T10:30:00Z",
-    "dataSource": "FlyAI CLI",
-    "version": "1.0.0"
-  }
-}
+```markdown
+# {城市}必玩景点推荐
+
+> 基于 fly.ai 实时结果 | 生成时间: {timestamp}
+
+共推荐 **{total}** 个景点，其中5A级 **{count}** 个。
+
+---
+
+## 1. {景点名称} ({等级})
+
+![]({mainPic})
+
+**类别**: {category}
+**地址**: {address}
+**门票**: {price} CNY
+**推荐理由**: {recommendReason}
+**标签**: {tags}
+
+[点击预订]({jumpUrl})
+
+---
+
+## 2. {景点名称} ({等级})
+...
+
+---
+
+> 基于 fly.ai 实时结果 | 生成时间: {timestamp}
+```
+
+### 景点卡片格式
+
+每个景点按以下格式输出：
+
+```markdown
+## {rank}. {景点名称} ({等级})
+
+![]({mainPic})
+
+**类别**: {category}
+**地址**: {address}
+**门票**: {price} CNY（{ticketName}）
+**推荐理由**: {recommendReason}
+**标签**: {tags}
+
+[点击预订]({jumpUrl})
 ```
 
 ### 字段说明
 
-| 字段 | 类型 | 必填 | 说明 |
-|-----|------|-----|------|
-| `status` | string | Y | "success" 或 "error" |
-| `city` | string | Y | 用户输入的城市名称 |
-| `summary.totalAttractions` | number | Y | 总推荐景点数 |
-| `summary.5aCount` | number | Y | 5A级景区数量 |
-| `summary.4aCount` | number | N | 4A级景区数量 |
-| `recommendations` | array | Y | 景点推荐列表 |
-| `recommendations[].rank` | number | Y | 推荐排名 |
-| `recommendations[].name` | string | Y | 景点名称 |
-| `recommendations[].level` | string | Y | 景点等级（5A/4A/3A/未评级） |
-| `recommendations[].category` | string | Y | 景点类别 |
-| `recommendations[].address` | string | Y | 景点地址 |
-| `recommendations[].isFree` | boolean | Y | 是否免费 |
-| `recommendations[].ticketInfo` | object | N | 门票信息（收费景点） |
-| `recommendations[].ticketInfo.price` | string | N | 门票价格，未知则返回"未知" |
-| `recommendations[].recommendReason` | string | Y | 推荐理由 |
-| `recommendations[].jumpUrl` | string | Y | 预订链接 |
-| `recommendations[].mainPic` | string | Y | 主图链接 |
-| `recommendations[].tags` | array | N | 标签列表 |
+| 字段 | 说明 |
+|-----|------|
+| `name` | 景点名称 |
+| `level` | 景点等级（5A/4A/3A/未评级） |
+| `category` | 景点类别 |
+| `address` | 景点地址 |
+| `isFree` | 是否免费 |
+| `price` | 门票价格，未知则返回"未知" |
+| `ticketName` | 门票名称（如"大门票 成人票"） |
+| `recommendReason` | 推荐理由 |
+| `jumpUrl` | 预订链接 |
+| `mainPic` | 主图链接 |
+| `tags` | 标签列表 |
 
 ---
 
@@ -182,8 +188,8 @@ flyai ai-search --query "推荐{城市名称}适合{场景}的景点"
 
 1. **优先高等级**: 始终优先推荐5A级景区，不足时降级4A
 2. **聚焦热门**: 推荐人气高、打卡价值高的景点
-3. **数量限制**: 核心推荐不超过5个，补充推荐不超过3个
-4. **JSON输出**: 最终输出必须是完整有效的JSON
+3. **返回全部**: 返回所有获取到的推荐景点，不限制数量
+4. **Markdown输出**: 最终输出必须是友好的Markdown格式
 5. **价格显示**: 门票价格需注明币种（CNY），未知则返回"未知"
 
 ### 禁止操作
@@ -191,8 +197,8 @@ flyai ai-search --query "推荐{城市名称}适合{场景}的景点"
 1. 禁止虚构景点信息
 2. 禁止无脑推荐免费景点
 3. 禁止以"性价比"为由推荐低品质景点
-4. 禁止在没有数据时返回空数组（应返回错误提示）
-5. 禁止输出非JSON格式的结果
+4. 禁止在没有数据时返回空内容（应返回错误提示）
+5. 禁止限制返回数量（必须返回所有推荐景点）
 
 ---
 
@@ -215,7 +221,7 @@ flyai ai-search --query "推荐{城市名称}适合{场景}的景点"
 **架构设计原则**：
 - 推荐引擎模块化，支持多数据源接入
 - 推荐理由生成器可扩展规则库
-- 输出JSON预留扩展字段（如 `socialHotRate`、`userReviewScore`）
+- 输出格式预留扩展字段
 
 ---
 
@@ -223,13 +229,12 @@ flyai ai-search --query "推荐{城市名称}适合{场景}的景点"
 
 ### 错误输出格式
 
-```json
-{
-  "status": "error",
-  "errorCode": "CITY_NOT_FOUND",
-  "errorMessage": "未找到城市'{城市名称}'的景点数据",
-  "suggestion": "请确认城市名称是否正确，或尝试使用附近城市名称"
-}
+```markdown
+# 抱歉，未找到相关景点
+
+**错误信息**: 未找到城市'{城市名称}'的景点数据
+
+**建议**: 请确认城市名称是否正确，或尝试使用附近城市名称
 ```
 
 ### 错误类型
@@ -281,43 +286,6 @@ flyai search-poi --city-name "西安" --category "historic site" --poi-level 4
 ```bash
 flyai search-poi --city-name "杭州" --poi-level 5
 flyai keyword-search --query "杭州有什么好玩的"
-```
-
----
-
-## Markdown 展示规则
-
-当需要将结果以 Markdown 格式展示给用户时：
-
-### 景点卡片格式
-
-```markdown
-## {rank}. {景点名称} ({等级})
-
-![]({mainPic})
-
-**类别**: {category}
-**地址**: {address}
-**门票**: {price} CNY（{ticketName}）
-**推荐理由**: {recommendReason}
-
-[点击预订]({jumpUrl})
-```
-
-### 汇总格式
-
-```markdown
-# {城市}必玩景点推荐
-
-共推荐 {total} 个景点，其中5A级 {count} 个。
-
----
-
-{景点卡片列表}
-
----
-
-> 基于 fly.ai 实时结果 | 生成时间: {timestamp}
 ```
 
 ---
